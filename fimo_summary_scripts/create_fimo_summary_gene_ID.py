@@ -76,8 +76,6 @@ def fimo_tsv(fimo_path, motif_id):
 # get motif names based on the motif ids
 def motif_name(motif_id, motifs_transl):
     motif_name = motifs_transl.loc[motifs_transl['matrix_id'] == motif_id, 'name']
-    # query_condition = "matrix_id=='" + motif_id + "'"
-    # motif_name = motifs_transl.query(query_condition)["name"]
     motif_name = ''.join(motif_name.astype(str))
     return motif_name
 
