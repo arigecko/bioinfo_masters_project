@@ -6,7 +6,7 @@ from matplotlib.colors import ListedColormap
 import sys
 
 if len(sys.argv) != 7:
-    print("Usage: python motif_cooc_analysis_updated.py <motif_overlap_matrix> <fimo_summary_table_w_deneIDs> <iterations>")
+    print("Usage: python motif_cooc_...py <motif_overlap_matrix> <fimo_summary_table_w_deneIDs> <iterations>")
     sys.exit(1)
 
 # paths to the required files

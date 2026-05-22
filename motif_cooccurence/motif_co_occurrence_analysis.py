@@ -22,6 +22,7 @@ plot_title_sys = sys.argv[6]
 plot_file_sys = sys.argv[7]
 peak_calling_approach = sys.argv[8]
 species = sys.argv[9]
+selected_motifs_path = sys.arg[10]
 
 plot_title_sys = plot_title_sys.replace("\\n", "\n")
 motifs_transl = pd.read_excel(motifs_translation_path)
@@ -37,23 +38,9 @@ if peak_calling_approach == 'CR':
 elif peak_calling_approach == 'MACS':
     skipr = 0
 
-# jaspar IDs of mapped TFs that were selected for the analysis
-mapped_motifs_68 = ["MA0147.4_comb", "MA0147.4_all", "MA0147.4_exact", "MA0147.4", "MA0595.1", "MA0596.1", "MA0613.1",
-                    "MA0486.2", "MA0663.1", "MA0669.1", "MA0083.3", "MA0691.1", "MA0737.1", "MA0758.1", "MA0770.1",
-                    "MA0105.4", "MA0795.1", "MA0807.1", "MA0823.1", "MA0838.1", "MA0849.1", "MA0863.1", "MA1489.1",
-                    "MA1570.1", "MA0685.2", "MA0798.3", "MA0831.3", "MA1511.2", "MA2325.1", "MA2328.1", "MA0619.2",
-                    "MA0853.2", "MA0874.2", "MA1632.2", "MA1466.2", "MA1636.2", "MA0018.5", "MA0839.2", "MA0609.3",
-                    "MA0754.3", "MA0639.2", "MA0469.4", "MA0154.5", "MA0162.5", "MA0598.4", "MA0828.3", "MA0098.4",
-                    "MA0645.2", "MA0156.4", "MA0492.2", "MA0491.3", "MA0846.2", "MA0851.2", "MA0852.3", "MA1607.2",
-                    "MA0593.2", "MA0037.5", "MA0143.5", "MA1990.2", "MA0647.2", "MA0131.3", "MA1991.2", "MA0046.3",
-                    "MA0485.3", "MA0050.4", "MA0051.2", "MA0493.3", "MA0657.2", "MA1513.2", "MA1515.2", "MA1516.2",
-                    "MA0039.5", "MA0768.3", "MA1518.3", "MA0659.4", "MA0052.5", "MA0497.2", "MA0620.4", "MA0664.2",
-                    "MA1642.2", "MA0502.3", "MA1644.2", "MA0063.3", "MA0122.4", "MA0505.3", "MA0506.3", "MA0067.3",
-                    "MA0070.2", "MA0782.3", "MA0784.3", "MA0799.3", "MA0002.3", "MA1118.2", "MA1153.2", "MA1562.2",
-                    "MA0868.3", "MA0829.3", "MA1625.2", "MA0804.2", "MA0688.2", "MA1648.2", "MA0090.4", "MA1968.2",
-                    "MA1122.2", "MA0861.2", "MA0526.5", "MA1627.2", "MA0095.4", "MA0749.2", "MA0752.2", "MA0147.NC_1",
-                    "MA0147.NC_3", "MA0599.1", "MA1517.2", "MA1959.2", "MA1107.3", "MA1512.2", "MA0742.2", "MA0740.2",
-                    "MA0741.1", "MA1514.2"]
+# read jaspar IDs of mapped TFs that were selected for the analysis
+with open(selected_motifs_path, 'r') as file:
+    mapped_motifs = [line.strip() for line in file]
 
 
 # read fimo.tsv file and check if it is empty
@@ -162,7 +149,7 @@ peaks_bed['chrom'] = peaks_bed["chrom"].str.replace("Sdo_chr", "", regex=True).a
 peak_codes = [i for i in range(1, len(peaks_bed) + 1)]  # 1-based indexing
 peaks_bed.insert(len(peaks_bed.columns), 'peak_code', peak_codes)
 
-mapped_ids, mapped_names = motif_id_name(mapped_motifs_68, motifs_transl, fimo_path)
+mapped_ids, mapped_names = motif_id_name(mapped_motifs, motifs_transl, fimo_path)
 
 dimensions = len(mapped_names)
 peaks_overlap_initial = np.zeros((dimensions, dimensions))
@@ -231,11 +218,11 @@ p_val_df.to_excel(summary_excel_path, index=False)
 
 
 # Plotting and saving the heatmap
-fig = plt.figure(figsize=(59, 59))
+fig = plt.figure(figsize=(89, 84))
 cmap = sns.color_palette("viridis_r", as_cmap=True)
-ax = sns.heatmap(p_val_df, cmap=cmap, cbar_kws={"label": "Values in p_val_df"}, annot=True, fmt=".2f", vmin=0,
-                 vmax=0.075, linewidths=0, rasterized=True)
+ax = sns.heatmap(p_val_df, cmap=cmap, cbar_kws={"label": "Values in p_val_df"}, vmin=0,
+                 vmax=0.005, linewidths=0, rasterized=True)
 
-plt.title(plot_title_sys, pad=30, fontsize=38)
+plt.title(plot_title_sys, pad=30, fontsize=50)
 
 fig.savefig(plot_file_sys, dpi=fig.dpi, bbox_inches='tight')
