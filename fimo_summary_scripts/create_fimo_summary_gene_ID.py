@@ -4,9 +4,10 @@ import gc
 import sys
 import os
 
-if len(sys.argv) != 9:
+if len(sys.argv) != 10:
     print("Usage: create_fimo_summary_gene_ID.py <peaks_bed> <motifs_translation> <fimo_output> "
-          "<peak_calling_approach> <species> <output_excel_file> <peak_assignment_tsv_path> <pwm_ids_txt>")
+          "<peak_calling_approach> <species> <output_excel_file> <peak_assignment_tsv_path> <pwm_ids_txt> "
+          "<output_excel_file_rearranged>")
     sys.exit(1)
 
 # paths to the required files
@@ -18,7 +19,8 @@ peak_calling_approach = sys.argv[4]
 species = sys.argv[5]
 excel_file_path = sys.argv[6]
 peak_encoding_path_sys = sys.argv[7]
-selected_motifs_path = sys.arg[8]
+selected_motifs_path = sys.argv[8]
+rearranged_out_path = sys.argv[9]
 
 # number of comment rows that needs to be skipped in peaks.bed file
 if peak_calling_approach == 'CR':
@@ -109,16 +111,41 @@ def motif_summary_update(peaks_bed, updated_df, motif_tsv, motif_name_t):
 def add_genes_to_fimo_table(fimo_df, encoding_df):
     encoding_subset = encoding_df[['peak_code', 'gene_ids']]
     resulting_df = pd.merge(fimo_df, encoding_subset, on="peak_code")
+    # move the last column to the 4th index
     col_names = resulting_df.columns.tolist()
-    last_col = col_names.pop()  # Remove the last column
-    col_names.insert(4, last_col)  # move it to the 4th index
+    last_col = col_names.pop()
+    col_names.insert(4, last_col)
     # Reorder the df
     resulting_df = resulting_df[col_names]
     return resulting_df
 
 
+def rearrange_df(fimo_df):
+    df_expanded = (fimo_df
+                   .explode("gene_ids")
+                   .loc[lambda x: x["gene_ids"] != "-"]
+                   .copy()
+    )
+    df_expanded['gene_ids_num'] = df_expanded['gene_ids'].str.extract(r'g(\d+)').astype(int)
+
+    cols = (list(df_expanded.columns[:5]) + ["gene_ids_num"] + list(df_expanded.columns[5:-1]))
+    df_expanded = df_expanded[cols]
+
+    metric_cols = df_expanded.columns[6:]
+
+    agg_dict = {'peak_code': lambda x: ', '.join(map(str, sorted(x.unique())))}
+    agg_dict.update({col: 'sum' for col in metric_cols})
+
+    df_expanded = df_expanded.copy()
+    # rearrange the table to be based on unique gene ids
+    result_df = (df_expanded.groupby(['gene_ids', 'gene_ids_num']).agg(agg_dict).reset_index().sort_values(
+        'gene_ids_num').drop(columns='gene_ids_num').reset_index(drop=True))
+
+    return result_df
+
+
 def create_genome_summary(peaks_data_path, motifs_transl_path, mapped_motifs, fimo_path, skip_rows, peak_encoding_path,
-                          excel_name_path=False):
+                          excel_name_path, rearranged_out):
     motifs_transl = pd.read_excel(motifs_transl_path)
     peaks_bed = pd.read_csv(peaks_data_path, sep="\t", names=['chrom', 'start', 'end'], skiprows=skip_rows)
     peaks_bed['chrom'] = peaks_bed["chrom"].str.replace("Sdo_chr", "", regex=True).astype('uint16')
@@ -148,6 +175,10 @@ def create_genome_summary(peaks_data_path, motifs_transl_path, mapped_motifs, fi
 
     motif_summary_w_IDs.to_excel(excel_name_path, index=False)
 
+    # rearrange the df
+    rearranged = rearrange_df(motif_summary_w_IDs)
+    rearranged.to_excel(rearranged_out, index=False)
+
     return f'Done!\nResults saved in:\n{excel_name_path}'
 
 
@@ -157,4 +188,5 @@ create_genome_summary(peaks_data_path=peaks_bed_path,
                       fimo_path=fimo_output_path,
                       excel_name_path=excel_file_path,
                       peak_encoding_path=peak_encoding_path_sys,
-                      skip_rows=skipr)
+                      skip_rows=skipr,
+                      rearranged_out=rearranged_out_path)
