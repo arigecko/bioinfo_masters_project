@@ -6,10 +6,10 @@ import gc
 import sys
 import os
 
-if len(sys.argv) != 10:
+if len(sys.argv) != 11:
     print("Usage: python motif_cooc_analysis_updated_wip.py <motif_translation> <fimo output> "
           "<peaks bed file>  <iterations> <summary_excel_path> <plot title> <plot file> "
-          "<peak calling approach (CR/MACS)> <species>")
+          "<peak calling approach (CR/MACS)> <species> <<pwm_ids_txt>>")
     sys.exit(1)
 
 # paths to the required files

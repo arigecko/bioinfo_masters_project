@@ -4,9 +4,9 @@ import gc
 import sys
 import os
 
-if len(sys.argv) != 7:
+if len(sys.argv) != 8:
     print("Usage: create_fimo_summary.py <peaks_bed> <motifs_translation> <fimo_output> "
-          "<peak_calling_approach> <species> <output_excel_file>")
+          "<peak_calling_approach> <species> <output_excel_file> <pwm_ids_txt>")
     sys.exit(1)
 
 # paths to the required files
@@ -17,6 +17,7 @@ fimo_output_path = sys.argv[3]
 peak_calling_approach = sys.argv[4]
 species = sys.argv[5]
 excel_file_path = sys.argv[6]
+selected_motifs_path = sys.arg[7]
 
 # number of comment rows that needs to be skipped in peaks.bed file
 if peak_calling_approach == 'CR':
@@ -29,25 +30,9 @@ if peak_calling_approach == 'CR':
 elif peak_calling_approach == 'MACS':
     skipr = 0
 
-# jaspar IDs of mapped TFs
-mapped_motifs_set = ['MA0002.3', 'MA0063.3', 'MA0122.4', 'MA0151.1', 'MA0492.2', 'MA0595.1', 'MA0645.2', 'MA0685.2',
-                     'MA0749.2', 'MA0798.3', 'MA0839.2', 'MA0874.2', 'MA1153.2', 'MA1516.2', 'MA1636.2', 'MA2328.1',
-                     'MA0018.5', 'MA0067.3', 'MA0131.3', 'MA0154.5', 'MA0493.3', 'MA0596.1', 'MA0647.2', 'MA0688.2',
-                     'MA0752.2', 'MA0799.3', 'MA0846.2', 'MA0875.2', 'MA1466.2', 'MA1517.2', 'MA0037.5', 'MA0070.2',
-                     'MA0143.5', 'MA0156.4', 'MA0497.2', 'MA0598.4', 'MA0657.2', 'MA0754.3', 'MA0804.2', 'MA0849.1',
-                     'MA0876.2', 'MA1481.2', 'MA1518.3', 'MA1644.2', 'MA0039.5', 'MA0083.3', 'MA0147.4', 'MA0162.5',
-                     'MA0502.3', 'MA0599.1', 'MA0659.4', 'MA0704.2', 'MA0758.1', 'MA0807.1', 'MA0851.2', 'MA0914.2',
-                     'MA1489.1', 'MA1562.2', 'MA1648.2', 'MA0090.4', 'MA0147.4_all', 'MA0164.2', 'MA0505.3', 'MA0609.3',
-                     'MA0663.1', 'MA0708.3', 'MA0768.3', 'MA0823.1', 'MA0852.3', 'MA1106.2', 'MA1511.2', 'MA1570.1',
-                     'MA1959.2', 'MA0050.4', 'MA0095.4', 'MA0469.4', 'MA0506.3', 'MA0613.1', 'MA0664.2', 'MA0737.1',
-                     'MA0770.1', 'MA0853.2', 'MA1107.3', 'MA1512.2', 'MA1607.2', 'MA1968.2', 'MA0051.2', 'MA0098.4',
-                     'MA0147.4_exact', 'MA0619.2', 'MA0669.1', 'MA0740.2', 'MA0782.3', 'MA0861.2', 'MA1116.2',
-                     'MA1513.2', 'MA1625.2', 'MA1990.2', 'MA0052.5', 'MA0105.4', 'MA0486.2', 'MA0526.5', 'MA0620.4',
-                     'MA0670.2', 'MA0741.1', 'MA0784.3', 'MA0831.3', 'MA0863.1', 'MA1118.2', 'MA1514.2', 'MA1627.2',
-                     'MA1991.2', 'MA0058.4', 'MA0108.3', 'MA0593.2', 'MA0639.2', 'MA0675.2', 'MA0742.2', 'MA0795.1',
-                     'MA0868.3', 'MA1122.2', 'MA1515.2', 'MA1632.2', 'MA2325.1']  # 'MA1642.2', 'MA0691.1', 'MA0046.3',
-# 'MA0147.4_comb', 'MA0828.3', 'MA0485.3', 'MA0521.3', 'MA0829.3', 'MA0147.NC_1', 'MA0147.NC_3'
-# 'MA0491.3', 'MA0838.1'
+# read jaspar IDs of mapped TFs that were selected for the analysis
+with open(selected_motifs_path, 'r') as file:
+    mapped_motifs_set = [line.strip() for line in file]
 
 
 # read fimo.tsv file and check if it is empty
